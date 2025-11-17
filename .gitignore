@@ -1,0 +1,89 @@
+# .gitignore for C# / .NET / VSCode
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS Code settings
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Rider
+.idea/
+*.sln.iml
+
+# NuGet
+*.nupkg
+# The packages folder can be ignored because of Package Restore
+**/packages/*
+!**/packages/build/
+!**/packages/repositories.config
+
+# Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+*.sap
+
+# ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# DotCover
+*.dotCover
+
+# NCrunch
+*.ncrunch*
+.*crunch*.local.xml
+
+# TeamCity
+_TeamCity*
+
+# DotTrace
+*.dotTrace
+
+# Azure Pipelines
+.vsts/
+
+# Local history for Visual Studio
+.localhistory/
+
+# Windows image file caches
+*.jfif
+*.jfi
+*.jif
+*.jpe
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.tif
+*.tiff
+*.ico
+*.bmp
+*.dib
+*.rle
+
+# Windows thumbnail cache files
+Thumbs.db
+Thumbs.db:encryptable
+Ehthumbs.db
+Ehthumbs_vista.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# VS Code extensions
+.vscode-test/
