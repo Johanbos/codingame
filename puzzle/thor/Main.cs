@@ -1,5 +1,8 @@
 // https://www.codingame.com/ide/puzzle/power-of-thor
 using System;
+
+namespace Thor;
+
 class Player
 {
     static void Main(string[] args)

@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 
+namespace AsciiArt;
+
 class Solution
 {
     private static readonly Dictionary<char, string[]> _asciiArt = [];
