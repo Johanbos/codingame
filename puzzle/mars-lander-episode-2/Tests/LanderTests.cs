@@ -16,7 +16,7 @@ namespace Tests
         {
             var lander = new Lander();
             lander.Update(0, 0, horizontalSpeed, 0, 0, rotate, 0);
-            return lander.Direction();
+            return lander.Heading();
         }
 
         [TestCase(1000, 500, 2000, true, TestName = "Lander moving right, landing zone is to the right")]
@@ -34,6 +34,26 @@ namespace Tests
 
             // Act
             var result = lander.GoingToLandingZone(line);
+
+            // Assert
+            Assert.That(result, Is.EqualTo(expected));
+        }
+
+        [TestCase(0, 0, false, TestName = "No rotation and no angle change needed")]
+        [TestCase(15, 0, false, TestName = "Positive rotation and no angle change needed")]
+        [TestCase(-15, 0, false, TestName = "Negative rotation and no angle change needed")]
+        [TestCase(0, 15, false, TestName = "No rotation and positive angle change needed")]
+        [TestCase(0, -15, false, TestName = "No rotation and negative angle change needed")]
+        [TestCase(15, -15, true, TestName = "Positive rotation and negative angle change needed")]
+        [TestCase(-15, 15, true, TestName = "Negative rotation and positive angle change needed")]
+        public void NeedsToRotate_ShouldReturnExpectedResult(int rotation, int angle, bool expected)
+        {
+            // Arrange
+            var lander = new Lander();
+            lander.Update(0, 0, 0, 0, 0, rotation, 0);
+
+            // Act
+            var result = lander.NeedsToRotate(angle);
 
             // Assert
             Assert.That(result, Is.EqualTo(expected));

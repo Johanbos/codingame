@@ -1,8 +1,9 @@
 using System;
 using NUnit.Framework;
 using App;
+using NUnit.Framework.Internal;
 
-namespace App;
+namespace Tests;
 
 [TestFixture]
 public class LineTests
@@ -10,24 +11,56 @@ public class LineTests
     [Test]
     public void Constructor_ShouldInitializeStartAndEndPoints()
     {
-        var start = new Point(0, 0);
-        var end = new Point(10, 10);
+        // Arrange
+        var startX = 0;
+        var endX = 100;
+        var start = new Point(startX, 0);
+        var end = new Point(endX, 100);
         var line = new Line(start, end);
+        const int landerSize = Lander.LanderSize;
 
-        Assert.That(start, Is.EqualTo(line.Start))  ;
-        Assert.That(end, Is.EqualTo(line.End));
+        // Act
+        var actualStart = line.Start;
+        var actualEnd = line.End;
+        var actualStartEdge = line.StartEdge;
+        var actualEndEdge = line.EndEdge;
+
+        // Assert
+        Assert.That(actualStartEdge, Is.EqualTo(start));
+        Assert.That(actualEndEdge, Is.EqualTo(end));
+        Assert.That(actualStart.X, Is.EqualTo(startX + landerSize));
+        Assert.That(actualEnd.X, Is.EqualTo(endX - landerSize));
     }
 
-    [TestCase(0, 0, 10, 10, 5, 5)]
-    [TestCase(0, 0, 20, 0, 10, 0)]
-    [TestCase(5, 5, 15, 5, 10, 5)]
-    public void Constructor_ShouldCalculateMiddlePointCorrectly(int x1, int y1, int x2, int y2, int expectedX, int expectedY)
+    [TestCase(0, 200, 0, "start", TestName = "Left of Line")]
+    [TestCase(0, 200, 200, "end", TestName = "Right of Line")]
+    [TestCase(0, 200, 10, "start", TestName = "Above Start")]
+    [TestCase(0, 200, 190, "end", TestName = "Above End")]
+    [TestCase(0, 200, 100, "end", TestName = "Above Middle")]
+    public void Constructor_ShouldCalculateNearestSpotCorrectly(int startX, int endX, int positionX, string point)
     {
-        var start = new Point(x1, y1);
-        var end = new Point(x2, y2);
+        // Arrange
+        var start = new Point(startX, 0);
+        var end = new Point(endX, 0);
         var line = new Line(start, end);
+        var position = new Point(positionX, 100);
 
-        Assert.That(expectedX, Is.EqualTo(line.Middle.X));
-        Assert.That(expectedY, Is.EqualTo(line.Middle.Y));
+        // Act
+        var actualStart = line.Start;
+        var actualEnd = line.End;
+        var nearest = line.NearestSpot(position);
+
+        // Assert
+        switch (point)
+        {
+            case "start":
+                Assert.That(nearest.X, Is.EqualTo(actualStart.X));
+                break;
+            case "end":
+                Assert.That(nearest.X, Is.EqualTo(actualEnd.X));
+                break;
+            default:
+                throw new ArgumentException($"Invalid point: {point}");
+        }
     }
 }

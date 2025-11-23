@@ -2,7 +2,7 @@ using System;
 using NUnit.Framework;
 using App;
 
-namespace App;
+namespace Tests;
 
 [TestFixture]
 public class PointTests
