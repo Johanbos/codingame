@@ -47,33 +47,33 @@ class Cockpit
     public string Control()
     {
 
-        var landingZoneDelta = DistanceToLandingZone();
+        var landingZoneDinstance = DistanceToLandingZone();
         var goingToLandingZone = Lander.GoingToLandingZone(LandingZone);
         if (goingToLandingZone)
         {
-            if (landingZoneDelta.Y < 100 || Lander.Fuel <= 20)
+            if (landingZoneDinstance.Y < 100 || Lander.Fuel <= 20)
             {
-                return Land(landingZoneDelta);
+                return Land(landingZoneDinstance);
             }
             else
             {
-                if (landingZoneDelta.X <= 0)
+                if (landingZoneDinstance.X <= 0)
                 {
-                    return PrepareForLanding(landingZoneDelta);
+                    return PrepareForLanding(landingZoneDinstance);
                 }
                 else
                 {
-                    return FlyTowardsLanding(landingZoneDelta);
+                    return FlyTowardsLanding(landingZoneDinstance);
                 }
             }
         }
         else
         {
-            return Turn(landingZoneDelta);
+            return Turn(landingZoneDinstance);
         }
     }
 
-    private string Turn(Point landingDelta)
+    private string Turn(Point landingZoneDinstance)
     {
         // Turn around
         Console.Error.WriteLine("Mode: TurnAround");
@@ -81,19 +81,19 @@ class Cockpit
         var directionToLanding = Lander.Position.X < nearestSpot.X ? -1 : 1;
         var angle = 60 * directionToLanding;
         var thrust = Lander.Rotation * Lander.Heading() >= 0 ? Lander.MaxThrustPower : 0;
-        return WithinLimits(angle, thrust, landingDelta.Y);
+        return WithinLimits(angle, thrust, landingZoneDinstance.Y);
     }
 
-    private string Land(Point landingDelta)
+    private string Land(Point landingZoneDinstance)
     {
         Console.Error.WriteLine("Mode: Landing");
 
         var angle = 0;
         var thrust = Lander.MaxThrustPower;
-        return WithinLimits(angle, thrust, landingDelta.Y);
+        return WithinLimits(angle, thrust, landingZoneDinstance.Y);
     }
 
-    private string PrepareForLanding(Point landingDelta)
+    private string PrepareForLanding(Point landingZoneDinstance)
     {
         Console.Error.WriteLine("Mode: PrepareForLanding");
         var nearestSpot = LandingZone.NearestSpot(Lander.Position);
@@ -111,7 +111,7 @@ class Cockpit
             // Keep speed within landing limits, calculate meters needed to reduce vertical speed to safe landing speed
             var distanceToSafeLandingSpeed = DistanceToDecelerate(Math.Abs(Lander.VerticalSpeed), Lander.MaxThrustPower - Map.Gravity, Lander.Rotation, Lander.LandingVerticalSpeed);
             Console.Error.WriteLine("Distance to safe landing: " + distanceToSafeLandingSpeed);
-            if (landingDelta.Y <= distanceToSafeLandingSpeed)
+            if (landingZoneDinstance.Y <= distanceToSafeLandingSpeed)
             {
                 var verticalSpeedAdjustment = Lander.LandingVerticalSpeed - Math.Abs(Lander.VerticalSpeed);
                 thrust = Lander.MaxThrustPower;
@@ -126,25 +126,35 @@ class Cockpit
 
             // Reduce horizontal speed to within landing limits
             var horizontalSpeedAdjustment = Lander.MaxLandingHorizontalSpeed - Math.Abs(Lander.HorizontalSpeed);
-            angle = horizontalSpeedAdjustment * 5;
+            angle = horizontalSpeedAdjustment * 3;
             angle *= Lander.Heading() * -1;
             thrust += Math.Abs(horizontalSpeedAdjustment);
             Console.Error.WriteLine("Horizontal speed margin: " + horizontalSpeedAdjustment + "m/s");
         }
 
-        return WithinLimits(angle, thrust, landingDelta.Y);
+        return WithinLimits(angle, thrust, landingZoneDinstance.Y);
     }
 
-    private string FlyTowardsLanding(Point landingDelta)
+    private string FlyTowardsLanding(Point landingZoneDinstance)
     {
         Console.Error.WriteLine($"Mode: FlyTowardsLanding");
 
+        // calculate ideal speed based on distance to landing zone
+        var idealSpeed = landingZoneDinstance.X switch
+        {
+            > 2500 => Lander.FlyingHorizontalSpeed + 20,
+            > 2000 => Lander.FlyingHorizontalSpeed + 10,
+            > 1500 => Lander.FlyingHorizontalSpeed ,
+            > 1000 => Lander.FlyingHorizontalSpeed - 10,
+            _ => Lander.FlyingHorizontalSpeed - 20
+        };
+
         // Keep speed within flying limits. Increase angle if speed is low, decrease angle if speed is near flying speed. 
-        var horizontalSpeedDifference = Lander.FlyingHorizontalSpeed - Math.Abs(Lander.HorizontalSpeed);
+        var horizontalSpeedDifference = idealSpeed - Math.Abs(Lander.HorizontalSpeed);
         var angle = horizontalSpeedDifference * 2;
         var thrust = Math.Abs(horizontalSpeedDifference / 2);
         angle *= Lander.Heading() * -1;
-        Console.Error.WriteLine("Horizontal speed diff: " + horizontalSpeedDifference + "m/s");
+        Console.Error.WriteLine($"Horizontal ideal speed: {idealSpeed} diff: " + horizontalSpeedDifference + "m/s");
 
         // Keep vertical speed within flying limits
         var verticalSpeedDifference = Lander.FlyingVerticalSpeed + Lander.VerticalSpeed;
@@ -156,7 +166,7 @@ class Cockpit
             thrust = 0;
         }
 
-        return WithinLimits(angle, thrust, landingDelta.Y);
+        return WithinLimits(angle, thrust, landingZoneDinstance.Y);
     }
 
     private Point PredictedLanding()
@@ -190,8 +200,14 @@ class Cockpit
 
     internal string WithinLimits(float angle, float thrust, int height)
     {
-        var maxAngle = Math.Max(15, 60 - (int)(45 * Math.Min(1, height / 4000.0)));
-        Console.Error.WriteLine($"Commanding angle: {angle}, thrust: {thrust}");
+        var maxAngle = height switch
+        {
+            > 2000 => 45,
+            > 1000 => 30,
+            > 500 => 15,
+            _ => 5
+        };
+        Console.Error.WriteLine($"Commanding angle: {angle}, MaxAngle: {maxAngle}, thrust: {thrust}");
         var angleBounded = (int)Math.Round(Math.Max(-maxAngle, Math.Min(maxAngle, angle)), 0);
         var thrustBounded = (int)Math.Round(Math.Max(Lander.MinThrustPower, Math.Min(Lander.MaxThrustPower, thrust)), 0);
         return $"{angleBounded} {thrustBounded}";
@@ -304,7 +320,9 @@ internal class Lander
     internal bool NeedsToRotate(int angle)
     {
         // Return true if rotation and angle have different signs
-        return (angle < 0 && Rotation > 0) || (angle > 0 && Rotation < 0);
+        var result = (angle < 0 && Rotation > 15) || (angle > 0 && Rotation < -15);
+        Console.Error.WriteLine($"Lander NeedsToRotate: {Rotation}, {angle}: {result}");
+        return result;
     }
 }
 
